@@ -39,14 +39,17 @@ public class SimpleThreadPool extends AbstractExecutorService {
 
         private Thread thread;
 
-        public Worker(Runnable runnable) {
+        private Boolean core;
+
+        public Worker(Runnable runnable, Boolean core) {
             this.task = runnable;
+            this.core = core;
             this.thread = Executors.defaultThreadFactory().newThread(this);
         }
 
         @Override
         public void run() {
-            runWorker(task);
+            runWorker(task, core);
         }
     }
 
@@ -77,33 +80,46 @@ public class SimpleThreadPool extends AbstractExecutorService {
 
     @Override
     public void execute(Runnable runnable) {
+        boolean result = true;
         if (workCount.get() < corePoolSize){
-            executeWorker(runnable);
+            result = executeWorker(runnable, true);
         }
         if (!workQueue.offer(runnable)){
+            result = executeWorker(runnable, false);
+        }
+        if (!result){
             throw new RejectedExecutionException();
         }
+
     }
 
-    private void executeWorker(Runnable runnable){
+    private boolean executeWorker(Runnable runnable, boolean core){
         int wc = workCount.get();
+        if (wc == maximumPoolSize){
+            return false;
+        }
         while (workCount.compareAndSet(wc, wc + 1 )) {
-            Worker worker = new Worker(runnable);
+            Worker worker = new Worker(runnable, core);
             Thread thread = worker.thread;
             thread.start();
         }
+        return true;
     }
 
-    private void runWorker(Runnable runnable) {
-        while (workCount.get() <= corePoolSize) {
+    private void runWorker(Runnable runnable, boolean core) {
+//        while (true) {
             try {
-                while (runnable != null || (runnable = workQueue.take()) != null) {
+                while (runnable != null || (runnable = core ? workQueue.take() : workQueue.poll(keepAliveTime, unit)) != null) {
                     runnable.run();
                     runnable = null;
                 }
             }catch (InterruptedException e){
                 log.error("thread time out", e);
             }
-        }
+//            if (!core){
+//                workCount.decrementAndGet();
+//                break;
+//            }
+//        }
     }
 }

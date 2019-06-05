@@ -13,7 +13,7 @@ public class StartTest {
     public static void main(String[] args) {
         AtomicInteger atomicInteger = new AtomicInteger(0);
 
-        ExecutorService es = new SimpleThreadPool(5,10, 1000,TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        ExecutorService es = new SimpleThreadPool(5,10, 1000,TimeUnit.SECONDS, new LinkedBlockingQueue<>(1));
         for (int i = 0; i < 1000; i++) {
             es.submit(() ->
                     System.out.println(Thread.currentThread().getName() + " task:" + atomicInteger.incrementAndGet()));

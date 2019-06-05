@@ -1,7 +1,6 @@
 package com.gforce.route.sapling.threadpool;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -11,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class StartDemo {
     public static void main(String[] args) {
         AtomicInteger atomicInteger = new AtomicInteger(0);
-        ExecutorService es = Executors.newFixedThreadPool(5);
+        ExecutorService es = new ThreadPoolExecutor(5, 10, 1000, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1));
         for (int i = 0; i < 1000; i++) {
             es.submit(() ->
                     System.out.println(Thread.currentThread().getName() + " task:" + atomicInteger.incrementAndGet()));
